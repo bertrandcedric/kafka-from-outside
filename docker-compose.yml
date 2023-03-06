@@ -22,8 +22,17 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: 'zk:2181'
       KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:19092
       KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-1:9092,EXTERNAL://haproxy:19092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:SSL,EXTERNAL:SSL
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.kafka.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_PASSWORD: confluent
+      KAFKA_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.kafka.keystore.jks
+      KAFKA_SSL_KEYSTORE_PASSWORD: confluent
+      KAFKA_SSL_KEY_PASSWORD: confluent
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: ""
+      KAFKA_SSL_CLIENT_AUTH: "required"
+    volumes:
+      - $PWD/secrets:/etc/kafka/secrets
     networks:
       - internal
   
@@ -38,8 +47,17 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: 'zk:2181'
       KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:29092
       KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-2:9092,EXTERNAL://haproxy:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:SSL,EXTERNAL:SSL
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.kafka.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_PASSWORD: confluent
+      KAFKA_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.kafka.keystore.jks
+      KAFKA_SSL_KEYSTORE_PASSWORD: confluent
+      KAFKA_SSL_KEY_PASSWORD: confluent
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: ""
+      KAFKA_SSL_CLIENT_AUTH: "required"
+    volumes:
+      - $PWD/secrets:/etc/kafka/secrets
     networks:
       - internal
 
@@ -54,8 +72,17 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: 'zk:2181'
       KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:39092
       KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-3:9092,EXTERNAL://haproxy:39092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:SSL,EXTERNAL:SSL
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.kafka.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_PASSWORD: confluent
+      KAFKA_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.kafka.keystore.jks
+      KAFKA_SSL_KEYSTORE_PASSWORD: confluent
+      KAFKA_SSL_KEY_PASSWORD: confluent
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: ""
+      KAFKA_SSL_CLIENT_AUTH: "required"
+    volumes:
+      - $PWD/secrets:/etc/kafka/secrets
     networks:
       - internal
 
@@ -63,10 +90,6 @@ services:
     image: haproxy:latest
     hostname: haproxy
     container_name: haproxy
-    depends_on:
-      - kafka-1
-      - kafka-2
-      - kafka-3
     ports:
       - 8404:8404
     volumes:
@@ -79,8 +102,9 @@ services:
     image: confluentinc/cp-enterprise-kafka:7.3.1
     container_name: client
     entrypoint: /bin/sh -c "sleep 10000000"
-    depends_on:
-      - haproxy
+    volumes:
+      - $PWD/secrets:/etc/kafka/secrets
+      - $PWD/client.properties:/tmp/client.properties
     networks:
       - external
 
