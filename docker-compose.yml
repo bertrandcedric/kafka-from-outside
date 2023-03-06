@@ -1,0 +1,90 @@
+---
+version: '2'
+services:
+  zk:
+    image: confluentinc/cp-zookeeper:7.3.1
+    hostname: zk
+    container_name: zk
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - internal
+
+  kafka-1:
+    image: confluentinc/cp-enterprise-kafka:7.3.1
+    hostname: kafka-1
+    container_name: kafka-1
+    depends_on:
+      - zk
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zk:2181'
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:19092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-1:9092,EXTERNAL://haproxy:19092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+    networks:
+      - internal
+  
+  kafka-2:
+    image: confluentinc/cp-enterprise-kafka:7.3.1
+    hostname: kafka-2
+    container_name: kafka-2
+    depends_on:
+      - zk
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: 'zk:2181'
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-2:9092,EXTERNAL://haproxy:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+    networks:
+      - internal
+
+  kafka-3:
+    image: confluentinc/cp-enterprise-kafka:7.3.1
+    hostname: kafka-3
+    container_name: kafka-3
+    depends_on:
+      - zk
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: 'zk:2181'
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:39092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-3:9092,EXTERNAL://haproxy:39092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+    networks:
+      - internal
+
+  haproxy:
+    image: haproxy:latest
+    hostname: haproxy
+    container_name: haproxy
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    ports:
+      - 8404:8404
+    volumes:
+     - $PWD/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    networks:
+      - internal
+      - external
+
+  client:
+    image: confluentinc/cp-enterprise-kafka:7.3.1
+    container_name: client
+    entrypoint: /bin/sh -c "sleep 10000000"
+    depends_on:
+      - haproxy
+    networks:
+      - external
+
+networks:
+    internal:
+    external:
+        
